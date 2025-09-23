@@ -1,14 +1,14 @@
-from src.Models.company_model import company_model
+# from src.Models.company_model import company_model
 from src.Models.settings import Settings
 import os
 import json
+import pathlib
 
 ####################################################
 # Менеджер настроек. 
 # Предназначен для управления настройками и хранения параметров приложения
 class settings_manager:
     __file_name:str = ""
-    __company:company_model = None
     __settings:Settings = None
 
     # Singletone
@@ -19,11 +19,6 @@ class settings_manager:
     
     def __init__(self):
         self.set_default()
-
-    # Параметры организации из настроек
-    @property
-    def company(self) -> company_model:
-        return self.__company
 
     @property
     def file_name(self) -> str:
@@ -38,54 +33,43 @@ class settings_manager:
     def file_name(self, value:str):
         if value.strip() == "":
             return
-        
         if os.path.exists(value):
             self.__file_name = value.strip()
         else:
             raise Exception("Не найден файл настроек!")
-
+        self.__file_name = value
+    
     # Загрузить настройки из Json файла
-    def load(self) -> bool:
-        if self.__file_name.strip() == "":
+    def load(self, file_name: str) -> bool:
+        self.file_name = file_name
+        path = pathlib.Path(self.file_name).absolute()
+        if not path.exists():
             raise Exception("Не найден файл настроек!")
-
         try:
-            with open( self.__file_name.strip(), 'r', encoding='utf-8') as file_instance:
+            with open( path, 'r', encoding='utf-8') as file_instance:
                 data = json.load(file_instance)
-                
                 if "company" in data.keys():
                     item = data["company"]
-                    
-                    self.__company.name = item["name"]
-                    return True
-
+                    return self.convert(item)
             return False
         except:
             return False
-
-    def convert(self) -> bool:
-        if self.__file_name.strip() == "":
-            raise Exception("Не найден файл настроек!")
-        try:
-            with open(self.__file_name.strip(), 'r', encoding='utf-8') as file_instance:
-                data = json.load(file_instance)
-
-                if "company" in data.keys():
-                    item = data["company"]
-                    self.__settings = Settings(item)
-                    return True
-            return False
         
-        except Exception as e:
-            return False
+    def convert(self, value: dict) -> bool:
+        self.settings.company.name = value["name"]
+        self.settings.company.inn = value["inn"]
+        self.settings.company.acc = value["acc"]
+        self.settings.company.correspondent_acc = value["correspondent_acc"]
+        self.settings.company.bic = value["bic"]
+        self.settings.company.ownership = value["ownership"]
+        return True
         
     # Параметры настроек по умолчанию
     def set_default(self):
-        self.__company = company_model()
-        self.__company.name = "Рога и копыта"
-        # self.__settings = Settings()
-
-
-    
-
-
+        self.__settings = Settings()
+        self.__settings.company.name = "Noname"
+        self.__settings.company.inn = "123456789000"
+        self.__settings.company.acc = "12345678900"
+        self.__settings.company.correspondent_acc = "12345678900"
+        self.__settings.company.bic = "123456789"
+        self.__settings.company.ownership = "12345"
