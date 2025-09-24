@@ -33,20 +33,18 @@ class settings_manager:
     def file_name(self, value:str):
         if value.strip() == "":
             return
-        if os.path.exists(value):
-            self.__file_name = value.strip()
+        path = pathlib.Path(value).absolute()
+        if os.path.exists(path):
+            self.__file_name = path
         else:
             raise Exception("Не найден файл настроек!")
-        self.__file_name = value
     
     # Загрузить настройки из Json файла
-    def load(self, file_name: str) -> bool:
-        self.file_name = file_name
-        path = pathlib.Path(self.file_name).absolute()
-        if not path.exists():
+    def load(self) -> bool:
+        if not self.file_name.exists():
             raise Exception("Не найден файл настроек!")
         try:
-            with open( path, 'r', encoding='utf-8') as file_instance:
+            with open(self.file_name, 'r', encoding='utf-8') as file_instance:
                 data = json.load(file_instance)
                 if "company" in data.keys():
                     item = data["company"]
@@ -68,8 +66,8 @@ class settings_manager:
     def set_default(self):
         self.__settings = Settings()
         self.__settings.company.name = "Noname"
-        self.__settings.company.inn = "123456789000"
-        self.__settings.company.acc = "12345678900"
-        self.__settings.company.correspondent_acc = "12345678900"
-        self.__settings.company.bic = "123456789"
-        self.__settings.company.ownership = "12345"
+        self.__settings.company.inn = 123456789000
+        self.__settings.company.acc = 12345678900
+        self.__settings.company.correspondent_acc = 12345678900
+        self.__settings.company.bic = 123456789
+        self.__settings.company.ownership = "12A45"

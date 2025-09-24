@@ -42,9 +42,9 @@ class test_models(unittest.TestCase):
         # Подготовка
        file_name = "settings_company.json"
        manager = settings_manager()
-       
+       manager.file_name = file_name
        # Дейсвтие
-       result = manager.load(file_name)
+       result = manager.load()
             
        # Проверки
        assert result == True
@@ -60,12 +60,13 @@ class test_models(unittest.TestCase):
         manager2 = settings_manager()
 
         # Дейсвтие
-        manager1.load(file_name)
+        manager1.load()
 
         # Проверки
         assert manager1.settings.company == manager2.settings.company
+        assert manager1 is manager2
 
-    # #Проверка на создание объекта Settings
+    #Проверка на создание объекта Settings
     def test_convert_in_settings(self):
         file_name = "./settings_company.json"
         manager = settings_manager()
@@ -78,14 +79,44 @@ class test_models(unittest.TestCase):
     def test_conver_init_setings(self):
         file_name = "D:/проекты с гита/templates_camomile/settings_company.json"
         manager1 = settings_manager()
-        manager1.load(file_name)
+        manager1.file_name = file_name
+        manager1.load()
 
         assert manager1.settings.company.name == "Ромашка"
-        assert manager1.settings.company.inn == "123456789000"
-        assert manager1.settings.company.acc == "12345678900"
-        assert manager1.settings.company.correspondent_acc == "12345678900"
-        assert manager1.settings.company.bic == "123456789"
+        assert manager1.settings.company.inn == 123456789000
+        assert manager1.settings.company.acc == 12345678900
+        assert manager1.settings.company.correspondent_acc == 12345678900
+        assert manager1.settings.company.bic == 123456789
         assert manager1.settings.company.ownership == "12345"
+    
+    def test_file_name_absolute_path(self):
+        manager = settings_manager()
+        file_name = "settings_company.json"
+        manager.file_name = file_name
+        assert manager.file_name != file_name
+        assert os.path.isabs(manager.file_name) == True
+
+    # проверка на вывод ошибок не корректных данных
+    def test_data_in_model_valid(self):
+        manager = settings_manager()
+
+        with self.assertRaises(ValueError):
+            manager.settings.company.name = ""
+        
+        with self.assertRaises(ValueError):
+            manager.settings.company.inn = 123123
+        
+        with self.assertRaises(ValueError):
+            manager.settings.company.acc = 123
+        
+        with self.assertRaises(ValueError):
+            manager.settings.company.correspondent_acc = True
+        
+        with self.assertRaises(ValueError):
+            manager.settings.company.bic = list()
+        
+        with self.assertRaises(ValueError):
+            manager.settings.company.ownership = "too long ownership"
 
   
 if __name__ == '__main__':
