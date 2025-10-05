@@ -3,8 +3,8 @@ import uuid
 from Src.Core.validator import validator
 
 class abstract_reference(ABC):
-    __usual_name:str
-    __unique_code:str
+    __name:str = ""
+    __unique_code:str = ""
 
     def __init__(self) -> None:
         super().__init__()
@@ -23,13 +23,13 @@ class abstract_reference(ABC):
         self.__unique_code = value.strip()
     
     @property
-    def usual_name(self) -> str:
-        return self.__usual_name
+    def name(self) -> str:
+        return self.__name
     
-    @usual_name.setter
-    def usual_name(self, value: str):
+    @name.setter
+    def name(self, value: str):
         validator.validate(value, str, 50, "le")
-        self.__usual_name = value
+        self.__name = value
     
 
     """
@@ -43,3 +43,5 @@ class abstract_reference(ABC):
     
     def __ne__(self, value):
         return self.__unique_code != value
+    
+    

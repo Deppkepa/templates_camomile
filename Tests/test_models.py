@@ -164,7 +164,7 @@ class test_models(unittest.TestCase):
         new_range = unit_model("кг", 1000, base_range)
         new_range.unique_code = uuid.uuid4().hex
 
-        assert new_range.name_unit == "кг"
+        assert new_range.name == "кг"
         assert new_range.base_unit == base_range
         
     
@@ -178,13 +178,13 @@ class test_models(unittest.TestCase):
         assert nomenclature.usual_name != ""
 
         with self.assertRaises(ArgumentException):
-            nomenclature.full_name = "В современном мире технологии развиваются очень быстро, " \
+            nomenclature.name = "В современном мире технологии развиваются очень быстро, " \
                                     "и каждые несколько лет происходят значительные изменения, " \
                                     "влияющие на все сферы жизни человека. Это приводит к появлению " \
                                     "новых возможностей, облегчает выполнение повседневных задач и расширяет" \
                                     " горизонты знаний и творчества.fbhvfyre"
         with self.assertRaises(ArgumentException):
-            nomenclature.usual_name = "В современном мире технологии развиваются очень быстро."
+            nomenclature.name = "В современном мире технологии развиваются очень быстро."
                                     
 
 

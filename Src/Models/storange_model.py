@@ -1,19 +1,23 @@
-import uuid
 from Src.Core.validator import validator
 from Src.Core.abstract_reference import abstract_reference
 
+"""
+Модель склада
+"""
 class storage_model(abstract_reference):
-    __name:str = ""
+    __address:str = ""
 
-    # Наименование
+    """
+    Адрес
+    """
     @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, value:str):
+    def address(self) -> str:
+        return self.__address.strip()
+    
+    @address.setter
+    def address(self, value:str):
         validator.validate(value, str)
-        self.__name = value.strip()
+        self.__address = value.strip()
     
     
     

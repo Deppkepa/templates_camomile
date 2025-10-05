@@ -4,22 +4,11 @@ from Src.Core.abstract_reference import abstract_reference
 ###############################################
 # Модель организации
 class company_model(abstract_reference):
-    __name:str = ""
     __inn:int = None # ИНН : 12 симв
     __acc:int = None # Счет 11 симв
     __correspondent_acc:int = None # 1Корреспондентский счет 11 симв
     __bic:int = None # Вид собственности 5 симв
     __ownership:str = ""
-
-    @property
-    def name(self) -> str:
-        return self.__name
-
-    @name.setter
-    def name(self, value:str):
-        validator.validate(value, str)
-        self.__name = value
-
 
     @property
     def inn(self) -> int:
