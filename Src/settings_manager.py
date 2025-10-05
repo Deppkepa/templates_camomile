@@ -1,15 +1,14 @@
-# from src.Models.company_model import company_model
-from src.Models.settings import Settings
-import os
-import json
-import pathlib
+from Src.Models.settings_model import settings_model
+from Src.Core.validator import validator
+import json, pathlib
+
 
 ####################################################
 # Менеджер настроек. 
 # Предназначен для управления настройками и хранения параметров приложения
 class settings_manager:
-    __file_name:str = ""
-    __settings:Settings = None
+    __file_name:str = "" # Наименование файла (полный путь)
+    __settings:settings_model = None # Настройки
 
     # Singletone
     def __new__(cls):
@@ -25,24 +24,20 @@ class settings_manager:
         return self.__file_name
     
     @property
-    def settings(self) -> Settings:
+    def settings(self) -> settings_model:
         return self.__settings
 
     # Полный путь к файлу настроек
     @file_name.setter
     def file_name(self, value:str):
-        if value.strip() == "":
-            return
+        validator.check_empty_value(value)
         path = pathlib.Path(value).absolute()
-        if os.path.exists(path):
-            self.__file_name = path
-        else:
-            raise Exception("Не найден файл настроек!")
-    
+        validator.check_search_path(path)
+        self.__file_name = path
+
     # Загрузить настройки из Json файла
     def load(self) -> bool:
-        if not self.file_name.exists():
-            raise Exception("Не найден файл настроек!")
+        validator.check_search_path(self.__file_name)
         try:
             with open(self.file_name, 'r', encoding='utf-8') as file_instance:
                 data = json.load(file_instance)
@@ -52,22 +47,21 @@ class settings_manager:
             return False
         except:
             return False
-        
+
+    # Обработать полученный словарь     
     def convert(self, value: dict) -> bool:
-        self.settings.company.name = value["name"]
-        self.settings.company.inn = value["inn"]
-        self.settings.company.acc = value["acc"]
-        self.settings.company.correspondent_acc = value["correspondent_acc"]
-        self.settings.company.bic = value["bic"]
-        self.settings.company.ownership = value["ownership"]
+        validator.check_type_value(value, dict)
+        fields = list(filter(lambda x: not x.startswith("_") , dir(self.__settings.company))) 
+        matching_keys = list(filter(lambda key: key in fields, value.keys()))
+        try:
+            for key in matching_keys:
+                setattr(self.__settings.company, key, value[key])
+        except:
+            return False        
         return True
-        
-    # Параметры настроек по умолчанию
+
+    # Настроек по умолчанию
     def set_default(self):
-        self.__settings = Settings()
+        self.__settings = settings_model()
         self.__settings.company.name = "Noname"
         self.__settings.company.inn = 123456789000
-        self.__settings.company.acc = 12345678900
-        self.__settings.company.correspondent_acc = 12345678900
-        self.__settings.company.bic = 123456789
-        self.__settings.company.ownership = "12A45"

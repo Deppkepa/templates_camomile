@@ -3,10 +3,14 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.settings_manager import settings_manager
-from src.Models.company_model import company_model
-import unittest
-import json
+from Src.settings_manager import settings_manager
+from Src.Models.company_model import company_model
+from Src.Models.storange_model import storage_model
+from Src.Core.validator import ArgumentException
+from Src.Models.unit_model import unit_model
+from Src.Models.nomenclature_model import nomenclature_model
+import unittest, json, uuid
+
 
 
 class test_models(unittest.TestCase):
@@ -22,7 +26,6 @@ class test_models(unittest.TestCase):
         # Проверки
         assert model.name == ""
 
-
     # Проверить создание основной модели
     # Данные меняем. Данные должны быть
     def test_notEmpty_createmodel_companymodel(self):
@@ -35,12 +38,11 @@ class test_models(unittest.TestCase):
         # Проверки
         assert model.name != ""
 
-
     # Проверить создание основной модели
     # Данные загружаем через json настройки
     def test_load_createmodel_companymodel(self):
         # Подготовка
-       file_name = "settings_company.json"
+       file_name = "settings.json"
        manager = settings_manager()
        manager.file_name = file_name
        # Дейсвтие
@@ -48,7 +50,6 @@ class test_models(unittest.TestCase):
             
        # Проверки
        assert result == True
-
 
     # Проверить создание основной модели
     # Данные загружаем. Проверяем работу Singletone
@@ -89,6 +90,7 @@ class test_models(unittest.TestCase):
         assert manager1.settings.company.bic == 123456789
         assert manager1.settings.company.ownership == "12345"
     
+    # Проверка что путь загружается абсолютным
     def test_file_name_absolute_path(self):
         manager = settings_manager()
         file_name = "settings_company.json"
@@ -100,24 +102,93 @@ class test_models(unittest.TestCase):
     def test_data_in_model_valid(self):
         manager = settings_manager()
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArgumentException):
             manager.settings.company.name = ""
         
-        with self.assertRaises(ValueError):
-            manager.settings.company.inn = 123123
+        with self.assertRaises(ArgumentException):
+            manager.settings.company.inn = "nhnd"
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArgumentException):
             manager.settings.company.acc = 123
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArgumentException):
             manager.settings.company.correspondent_acc = True
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArgumentException):
             manager.settings.company.bic = list()
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ArgumentException):
             manager.settings.company.ownership = "too long ownership"
 
-  
+    # проверка на дефолтные настройки
+    def test_default_settings(self):
+        file_name = "D:/проекты с гита/templates_camomile/settings.json"
+        manager1 = settings_manager()
+        manager1.file_name = file_name
+        assert manager1.settings.company.name == "Noname"
+        assert manager1.settings.company.inn == 123456789000
+        assert manager1.settings.company.acc == None
+        assert manager1.settings.company.correspondent_acc == None
+        assert manager1.settings.company.bic == None
+        assert manager1.settings.company.ownership == ""
+
+    #задача: Добавить UUID и сделать сравнение двух моделей
+    # переопределить сравнение
+    # проверка на сравнение двух по значению одинаковых моделей (по ссылке)
+    def test_epnals_storage_model_create(self):
+        # подготовка
+        id = uuid.uuid4().hex
+        storage1 = storage_model()
+        storage1.unique_code = id
+        storage2 = storage_model()
+        storage2.unique_code = id
+        # Действие
+        
+        # Проверка
+        assert storage1 == storage2
+    
+    # Проверка на создания storange model
+    def test_create_storage_model(self):
+        storage = storage_model()
+        storage.unique_code = uuid.uuid4().hex
+        storage.name = "Ромашка"
+        assert storage.name != ""
+        assert storage.unique_code != ""
+    
+
+    # проверка на создания unit model
+    def test_create_unit_model(self):
+        base_range = unit_model("грамм", 1)
+        base_range.unique_code = uuid.uuid4().hex
+
+        new_range = unit_model("кг", 1000, base_range)
+        new_range.unique_code = uuid.uuid4().hex
+
+        assert new_range.name_unit == "кг"
+        assert new_range.base_unit == base_range
+        
+    
+    #Проверка на создание nomenclature model
+    def test_create_nomenclature_model(self):
+        nomenclature = nomenclature_model()
+        nomenclature.full_name = "Полное имя"
+        nomenclature.usual_name = "Обычное имя"
+
+        assert nomenclature.full_name != ""
+        assert nomenclature.usual_name != ""
+
+        with self.assertRaises(ArgumentException):
+            nomenclature.full_name = "В современном мире технологии развиваются очень быстро, " \
+                                    "и каждые несколько лет происходят значительные изменения, " \
+                                    "влияющие на все сферы жизни человека. Это приводит к появлению " \
+                                    "новых возможностей, облегчает выполнение повседневных задач и расширяет" \
+                                    " горизонты знаний и творчества.fbhvfyre"
+        with self.assertRaises(ArgumentException):
+            nomenclature.usual_name = "В современном мире технологии развиваются очень быстро."
+                                    
+
+
+
+
 if __name__ == '__main__':
     unittest.main()   
