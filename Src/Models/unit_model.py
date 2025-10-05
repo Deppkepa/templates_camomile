@@ -43,6 +43,7 @@ class unit_model(abstract_reference):
     @staticmethod
     def create_gramm():
         return unit_model.create("грамм")
+    
      
     """
     Универсальный метод - фабричный
