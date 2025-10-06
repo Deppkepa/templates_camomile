@@ -9,7 +9,7 @@ from Src.Models.storange_model import storage_model
 from Src.Core.validator import ArgumentException
 from Src.Models.unit_model import unit_model
 from Src.Models.nomenclature_model import nomenclature_model
-from Src.Models.groupNomenclature_model import groupNomenclature_model
+from Src.Models.group_nomenclature_model import group_nomenclature_model
 from Src.Models.recipe_model import recipe_model
 import unittest, json, uuid
 
@@ -175,7 +175,7 @@ class test_models(unittest.TestCase):
     def test_create_nomenclature_model(self):
         nomenclature = nomenclature_model()
         nomenclature.name = "Полное имя"
-        group = groupNomenclature_model("группа")
+        group = group_nomenclature_model("группа")
         nomenclature.group_nomenclature = group
         assert nomenclature.name != ""
         assert nomenclature.group_nomenclature == group
@@ -191,7 +191,7 @@ class test_models(unittest.TestCase):
 
     #Проверка на создание group_nomenclature model
     def test_create_groupNomenclature_model(self):
-        group = groupNomenclature_model("группа")
+        group = group_nomenclature_model("группа")
         assert group.name != ""
 
     #Проверка на создание recipe model

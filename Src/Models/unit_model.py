@@ -1,11 +1,16 @@
 from Src.Core.abstract_reference import abstract_reference
 from Src.Core.validator import validator
 
+"""
+Модель единицы измерения
+"""
+
 class unit_model(abstract_reference):
     __coeff_recalculation: int = None #  единица пересчета
     __base_unit: 'unit_model' = None # базовая единица изрения
 
     def __init__(self, name_unit, coeff_recalculation, base_unit=None):
+        super().__init__()
         self.name = name_unit
         self.__coeff_recalculation = coeff_recalculation
         self.__base_unit = base_unit

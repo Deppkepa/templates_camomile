@@ -1,5 +1,6 @@
 from Src.Core.validator import validator
-from Src.Models.recipe_model import recipe_model
+
+
 """
 Репозиторий данных
 """
@@ -16,7 +17,7 @@ class reposity:
     """
     @staticmethod
     def range_key() -> list:
-        return ["unit_model", "nomenclature_model", "groupNomenclature_model"]
+        return ["unit_model", "nomenclature_model", "group_nomenclature_model"]
     
     def __setitem__(self, key, value):
         self.__data[key] = value
