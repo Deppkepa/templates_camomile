@@ -9,6 +9,8 @@ from Src.Models.storange_model import storage_model
 from Src.Core.validator import ArgumentException
 from Src.Models.unit_model import unit_model
 from Src.Models.nomenclature_model import nomenclature_model
+from Src.Models.group_nomenclature_model import group_nomenclature_model
+from Src.Models.recipe_model import recipe_model
 import unittest, json, uuid
 
 
@@ -168,14 +170,15 @@ class test_models(unittest.TestCase):
         assert new_range.base_unit == base_range
         
     
+
     #Проверка на создание nomenclature model
     def test_create_nomenclature_model(self):
         nomenclature = nomenclature_model()
-        nomenclature.full_name = "Полное имя"
-        nomenclature.usual_name = "Обычное имя"
-
-        assert nomenclature.full_name != ""
-        assert nomenclature.usual_name != ""
+        nomenclature.name = "Полное имя"
+        group = group_nomenclature_model("группа")
+        nomenclature.group_nomenclature = group
+        assert nomenclature.name != ""
+        assert nomenclature.group_nomenclature == group
 
         with self.assertRaises(ArgumentException):
             nomenclature.name = "В современном мире технологии развиваются очень быстро, " \
@@ -185,10 +188,17 @@ class test_models(unittest.TestCase):
                                     " горизонты знаний и творчества.fbhvfyre"
         with self.assertRaises(ArgumentException):
             nomenclature.name = "В современном мире технологии развиваются очень быстро."
-                                    
 
+    #Проверка на создание group_nomenclature model
+    def test_create_groupNomenclature_model(self):
+        group = group_nomenclature_model("группа")
+        assert group.name != ""
 
-
+    #Проверка на создание recipe model
+    def test_create_recipe_model(self):
+        recipe = recipe_model()
+        recipe.cooking_time_minutes = 30
+        assert recipe.cooking_time_minutes != None 
 
 if __name__ == '__main__':
     unittest.main()   

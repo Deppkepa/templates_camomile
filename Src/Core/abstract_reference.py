@@ -2,13 +2,18 @@ from abc import ABC
 import uuid
 from Src.Core.validator import validator
 
+
+'''
+Абстрактный класс для наследования моделей
+Содержит в себе только генерацию уникального кода
+'''
 class abstract_reference(ABC):
     __name:str = ""
     __unique_code:str = ""
 
     def __init__(self) -> None:
         super().__init__()
-        self.__unique_code = uuid.uuid4().hex
+        self.unique_code = uuid.uuid4().hex
 
     """
     Уникальный код
