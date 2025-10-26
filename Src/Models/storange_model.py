@@ -1,10 +1,11 @@
 from Src.Core.validator import validator
 from Src.Core.abstract_reference import abstract_reference
+from Src.Core.entity_model import entity_model
 
 """
 Модель склада
 """
-class storage_model(abstract_reference):
+class storage_model(entity_model):
     __address:str = ""
 
     """

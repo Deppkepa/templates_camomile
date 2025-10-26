@@ -1,9 +1,10 @@
 from Src.Core.validator import validator
 from Src.Core.abstract_reference import abstract_reference
+from Src.Core.entity_model import entity_model
 
 ###############################################
 # Модель организации
-class company_model(abstract_reference):
+class company_model(entity_model):
     __inn:int = None # ИНН : 12 симв
     __acc:int = None # Счет 11 симв
     __correspondent_acc:int = None # 1Корреспондентский счет 11 симв

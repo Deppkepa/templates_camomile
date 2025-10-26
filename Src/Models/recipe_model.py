@@ -1,11 +1,12 @@
 from Src.Core.abstract_reference import abstract_reference
 from Src.Core.validator import validator
+from Src.Core.entity_model import entity_model
 
 '''
 Модель рецептов
 '''
 
-class recipe_model(abstract_reference):
+class recipe_model(entity_model):
     __cooking_method:list = []
     __ingredients:list = []
     __count_portions:int = None
