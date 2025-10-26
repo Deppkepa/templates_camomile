@@ -43,8 +43,10 @@ class settings_manager:
                 data = json.load(file_instance)
                 if "company" in data.keys():
                     item = data["company"]
-                    return self.convert(item)
-            return False
+                    self.convert(item)
+                if "response_format" in data.keys():
+                    self.settings.response_format=data["response_format"].lower()
+            return True
         except:
             return False
 
@@ -65,3 +67,4 @@ class settings_manager:
         self.__settings = settings_model()
         self.__settings.company.name = "Noname"
         self.__settings.company.inn = 123456789000
+        self.__settings.response_format="csv"
