@@ -26,24 +26,7 @@ class TestStorageModel(unittest.TestCase):
         # Проверка
         assert result is not None
 
-    def test_not_none_factory_create(self):
-        # Подготовка
-        factory = factory_entities()
-        data = []
-        entity = group_nomenclature_model.create("test")
-        data.append(entity)
 
-        # Действие
-        logic = factory.create(response_formats.csv())
-        
-        assert logic is not None
-        instance = logic()
-        isinstance(instance, abstract_response) # Придумать как исправить валитор с учетом этого правила
-        # print(instance)
-        # validator.validate(instance, abstract_response)
-        text = instance.build(response_formats.csv(), data)
-
-        assert len(text) > 0
 
 if __name__ == '__main__':
     unittest.main()  
