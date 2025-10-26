@@ -1,5 +1,4 @@
 from Src.Core.abstract_reference import abstract_reference
-from abc import ABC
 from Src.Core.validator import validator
 
 
@@ -9,12 +8,21 @@ from Src.Core.validator import validator
 class entity_model(abstract_reference):
     __name:str = ""
 
+    def __init__(self):
+        super().__init__()
     # Наименование
     @property
     def name(self) -> str:
         return self.__name
 
     @name.setter
-    def name(self, value:str):
+    def name(self, value:str) -> str:
         validator.validate(value, str)
         self.__name = value.strip()
+    
+    # Фабричный метод
+    @staticmethod
+    def create(name:str):
+        item = entity_model()
+        item.name = name
+        return item

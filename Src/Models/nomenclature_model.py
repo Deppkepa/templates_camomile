@@ -2,12 +2,13 @@ from Src.Core.abstract_reference import abstract_reference
 from Src.Core.validator import validator
 from Src.Models.group_nomenclature_model import group_nomenclature_model
 from Src.Models.unit_model import unit_model
+from Src.Core.entity_model import entity_model
 
 """
 Модель номенклатуры
 """
 
-class nomenclature_model(abstract_reference):
+class nomenclature_model(entity_model):
     __group_nomenclature: group_nomenclature_model = None
     __unit: unit_model = None
 

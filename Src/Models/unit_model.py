@@ -1,11 +1,12 @@
 from Src.Core.abstract_reference import abstract_reference
 from Src.Core.validator import validator
+from Src.Core.entity_model import entity_model
 
 """
 Модель единицы измерения
 """
 
-class unit_model(abstract_reference):
+class unit_model(entity_model):
     __coeff_recalculation: int = None #  единица пересчета
     __base_unit: 'unit_model' = None # базовая единица изрения
 
