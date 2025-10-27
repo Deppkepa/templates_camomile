@@ -40,6 +40,36 @@ class test_convertors(unittest.TestCase):
         self.assertIn('name', converted)
         self.assertIn('coeff_recalculation', converted)
 
+    # Проверка convert_factory для basic
+    def test_basic_convertor_factory(self):
+        # Подготовка
+        converter_num = convert_factory.get_converter(123)
+        converter_str = convert_factory.get_converter("hello")
+        # Действие
+        # Проверки
+        self.assertEqual(converter_num.convert(123), {'value': 123})
+        self.assertEqual(converter_str.convert("hello"), {'value': 'hello'})
+
+    # Проверка convert_factory для datetime
+    def test_datetime_convertor_factory(self):
+        # Подготовка
+        dt = datetime.now()
+        # Действие
+        converter = convert_factory.get_converter(dt)
+        # Проверки
+        self.assertIn('timestamp', converter.convert(dt))
+
+    #Проверка convert_factory для reference
+    def test_reference_convertor_factory(self):
+        #Подготовка
+        um = unit_model("граммы", 1)
+        #Действие
+        converter=convert_factory.get_converter(um)
+        result=converter.convert(um)
+        #Проверки
+        self.assertIn('name',result)
+        self.assertIn('coeff_recalculation', result)
+
     # Проверка конверт фактори
     def test_convert_factory(self):
         # Подготовка

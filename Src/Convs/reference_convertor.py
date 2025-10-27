@@ -15,7 +15,10 @@ class reference_convertor(abstract_convertor):
                 value = getattr(obj, attr)
                 if callable(value):
                     continue
-                result[attr] = value
+                if hasattr(value, "__dict__"):
+                    result[attr] = self.convert(value)
+                else:
+                    result[attr] = value
             return result
         else:
             raise TypeError(f"Объект {obj} не имеет атрибутов для сериализации")
