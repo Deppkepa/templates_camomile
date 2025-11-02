@@ -4,6 +4,7 @@ from Src.Convs.basic_convertor import basic_convertor
 from Src.Convs.datetime_convertor import datetime_convertor
 from Src.Convs.reference_convertor import reference_convertor
 from datetime import datetime
+from Src.Core.abstract_reference import abstract_reference
 
 
 class convert_factory:
@@ -12,10 +13,10 @@ class convert_factory:
     """
     def __init__(self):
         self._handlers = {
-            (int, float, str): basic_convertor(),
             datetime: datetime_convertor(),
+            (int, float, str): basic_convertor(),
             (list, tuple, dict): structure_convertor(self),
-            object: reference_convertor()
+            abstract_reference: reference_convertor(self)
         }
 
     @staticmethod

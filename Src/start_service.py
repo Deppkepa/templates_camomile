@@ -17,6 +17,9 @@ class start_service:
     __repo: reposity = reposity()
     __is_first_run: bool = True
 
+    def first_run_setup(self):
+        self.__is_first_run = True
+
     def __init__(self):
         self.__repo[reposity.range_key()[0]] = []
         self.__repo[reposity.range_key()[1]] = []

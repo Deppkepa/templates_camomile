@@ -13,6 +13,8 @@ from Src.Core.common import common
 app = connexion.FlaskApp(__name__)
 service = start_service()
 service.start()
+factory = factory_entities()
+conv_factory = convert_factory()
 
 """
 Проверить доступность REST API
@@ -47,7 +49,7 @@ def get_osv():
 
     repo = service.data()
     report = generate_osv_report(repo, begin_date, end_date, storage_id)
-    return response_json().build('json', report)
+    return jsonify(conv_factory.get_converter(report).convert(report))
 
 
 def calculate_initial_balance(transactions, date, storage_id):
@@ -57,7 +59,7 @@ def calculate_initial_balance(transactions, date, storage_id):
     balance = {}
     for txn in transactions:
         if txn.storage.unique_code == storage_id and txn.date < date:
-            key = f"{txn.nomenclature.name} {txn.unit.name}"
+            key = f"{txn.nomenclature.unique_code}-{txn.unit.unique_code}"
             balance[key] = balance.get(key, 0) + txn.quantity
     return balance
 
@@ -72,10 +74,10 @@ def aggregate_movements(transactions, begin, end, storage_id):
                 txn.storage.unique_code == storage_id
                 and begin <= txn.date <= end
         ):
-            key = f"{txn.nomenclature.name} {txn.unit.name}"
+            key = f"{txn.nomenclature.unique_code}-{txn.unit.unique_code}"
             movement = movements.get(key, {
-                'sku': txn.nomenclature.name,
-                'unit': txn.unit.name,
+                'nomenclature': txn.nomenclature,
+                'unit': txn.unit,
                 'income': [],
                 'expense': []
             })
@@ -117,16 +119,16 @@ def generate_osv_report(repo, begin_date, end_date, storage_id):
 
     # Формируем финальный отчет
     report = []
-    for product in movements:
-        sku = product.split()[0]
-        unit = product.split()[1]
-        total_income = sum(t.quantity for t in movements[product]['income'])
-        total_expense = sum(t.quantity for t in movements[product]['expense'])
-        final_balance = initial_balance.get(product, 0) + total_income - total_expense
+    for key in movements:
+        nomenclature = movements[key]['nomenclature']
+        unit = movements[key]['unit']
+        total_income = sum(t.quantity for t in movements[key]['income'])
+        total_expense = sum(t.quantity for t in movements[key]['expense'])
+        final_balance = initial_balance.get(key, 0) + total_income - total_expense
 
         report.append({
-            'initial_balance': initial_balance.get(product, 0),
-            'sku': sku,
+            'initial_balance': initial_balance.get(key, 0),
+            'nomenclature': nomenclature,
             'unit': unit,
             'total_income': total_income,
             'total_expense': total_expense,
@@ -142,17 +144,17 @@ def serialize_repo(repo):
     Используя имеющиеся конвертеры для корректной сериализации объектов.
     """
     data = {
-        'units': [convert_factory.get_converter(u).convert(u) for u in repo.units],
-        'nomenclatures': [convert_factory.get_converter(n).convert(n) for n in repo.nomenclatures],
-        'groups': [convert_factory.get_converter(g).convert(g) for g in repo.groups],
-        'recipes': [convert_factory.get_converter(r).convert(r) for r in repo.recipes],
-        'storages': [convert_factory.get_converter(s).convert(s) for s in repo.storages],
-        'transactions': [convert_factory.get_converter(t).convert(t) for t in repo.transactions]
+        'units': [convert_factory.get_converter(u).convert(u) for u in repo().data["unit_model"]],
+        'nomenclatures': [convert_factory.get_converter(n).convert(n) for n in repo().data["nomenclature_model"]],
+        'groups': [convert_factory.get_converter(g).convert(g) for g in repo().data["group_nomenclature_model"]],
+        'recipes': [convert_factory.get_converter(r).convert(r) for r in repo().recipe],
+        'storages': [convert_factory.get_converter(s).convert(s) for s in repo().data["storage_model"]],
+        'transactions': [convert_factory.get_converter(t).convert(t) for t in repo().data["transaction_model"]]
     }
     return data
 
 
-@app.route('/api/save', methods=['POST'])
+@app.route('/api/save', methods=['GET'])
 def save_repository_to_file():
     """
     Сохраняет все данные из репозитория в файл.
