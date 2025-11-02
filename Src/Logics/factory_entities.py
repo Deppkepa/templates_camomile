@@ -4,6 +4,7 @@ from Src.Logics.response_json import response_json
 from Src.Logics.response_xml import response_xml
 from Src.Core.abstract_reference import abstract_reference
 from Src.Core.validator import validator, OperationException
+from Src.Models.transaction_model import transaction_model
 from Src.settings_manager import settings_manager
 from Src.Core.abstract_response import abstract_response
 class factory_entities:
@@ -14,6 +15,16 @@ class factory_entities:
         "xml":response_xml()
     }
 
+    def create_transaction(self, data: dict) -> transaction_model:
+        validator.validate(data, dict)
+        transaction = transaction_model()
+        transaction.date = data.get('date')
+        transaction.unique_code = data.get('unique_code')
+        transaction.nomenclature = data.get('nomenclature')
+        transaction.storage = data.get('storage')
+        transaction.quantity = data.get('quantity')
+        transaction.unit = data.get('unit')
+        return transaction
 
     def create(self, format: str) -> abstract_reference:
         if format not in self.__match.keys():

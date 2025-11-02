@@ -7,5 +7,6 @@
         "correspondent_acc": 12345678900,
         "bic": 123456789,
         "ownership": "12345"
-    }
+    },
+    "first_start": true
 }
