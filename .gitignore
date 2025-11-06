@@ -1,6 +1,12 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,visualstudio,visualstudiocode,openframeworks+visualstudio,pycharm,pycharm+all,pycharm+iml
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudio,visualstudiocode,openframeworks+visualstudio,pycharm,pycharm+all,pycharm+iml
 
+# Игнорируем файл статуса запуска
+run_status.json
+
+# Игнорируем файлы с названием, начинающимся с "data_" и оканчивающимся ".json"
+data_*.json
+
 ### OpenFrameworks+VisualStudio ###
 # ignore generated binaries
 # but not the data folder
