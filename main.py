@@ -1,9 +1,11 @@
 import json
+from collections import defaultdict
 from datetime import datetime
 
 import connexion
 from flask import request, jsonify
 from Src.Logics.factory_entities import factory_entities
+from Src.Models.inventory_snapshot_model import inventory_snapshot_model
 from Src.settings_manager import settings_manager
 from Src.start_service import start_service
 from Src.Logics.response_json import response_json
@@ -88,6 +90,70 @@ def aggregate_movements(transactions, begin, end, storage_id):
             movements[key] = movement
     return movements
 
+def calculate_inventories_until_block(repo, block_period, storage_id):
+    """
+    Рассчитывает остатки до даты блокировки.
+    """
+    # Сначала попробуем найти готовый инвентарный снимок
+    existing_snapshot = next(
+        (snap.inventory for snap in repo.inventory_snapshots if snap.snapshot_date == block_period),
+        None
+    )
+
+    if existing_snapshot is None:
+        # Если готового снимка нет, делаем расчет вручную
+        beginning = datetime.strptime("1900-01-01", "%Y-%m-%d")
+        # Возьмем все транзакции до даты блокировки
+        relevant_txns = [
+            txn for txn in repo.transactions
+            if txn.storage.unique_code == storage_id and beginning <= txn.date <= block_period
+        ]
+
+        # Сделаем агрегирование
+        inventories = defaultdict(float)
+        for txn in relevant_txns:
+            key = f"{txn.nomenclature.unique_code}-{txn.unit.unique_code}"
+            inventories[key] += txn.quantity
+
+        # Создаем новый инвентарный снимок и сохраняем его
+        new_snapshot = inventory_snapshot_model()
+        new_snapshot.snapshot_date = block_period
+        new_snapshot.inventory = dict(inventories)
+        repo.inventory_snapshots.append(new_snapshot)
+        return new_snapshot.inventory
+    else:
+        return existing_snapshot
+
+def generate_osv_report_with_block(repo, begin_date, end_date, storage_id, block_period=settings_manager().settings.block_period):
+    """
+    Генерирует отчет ОСВ с учетом блокировки.
+    """
+
+
+    # Проверяем, есть ли у нас готовность на момент блокировки
+    pre_block_inventories = calculate_inventories_until_block(repo, block_period, storage_id)
+
+    # Теперь делаем расчеты движений после блокировки
+    post_block_txns = [
+        txn for txn in repo.transactions
+        if txn.storage.unique_code == storage_id and block_period < txn.date <= end_date
+    ]
+
+    # Строим сводку движений после блокировки
+    post_block_inventories = defaultdict(float)
+    for txn in post_block_txns:
+        key = f"{txn.nomenclature.unique_code}-{txn.unit.unique_code}"
+        post_block_inventories[key] += txn.quantity
+
+    # Соединяем обе части вместе
+    combined_inventories = pre_block_inventories.copy()
+    for key, value in post_block_inventories.items():
+        if key in combined_inventories:
+            combined_inventories[key] += value
+        else:
+            combined_inventories[key] = value
+
+    return combined_inventories
 
 def generate_osv_report(repo, begin_date, end_date, storage_id):
     """
@@ -174,6 +240,42 @@ def save_repository_to_file():
         print(e)
         return "Ошибка при сохранении данных", 500
 
+@app.route('/api/settings/block_period', methods=['POST'])
+def update_block_period():
+    block_period_str = request.form.get('block_period')
+    if not block_period_str:
+        return "Ошибка: отсутствует обязательный параметр", 400
+
+    try:
+        block_period = datetime.strptime(block_period_str, "%Y-%m-%d")
+    except ValueError:
+        return "Ошибка: неверный формат даты", 400
+
+    settings = settings_manager().settings
+    settings.block_period = block_period
+    return "Дата блокировки успешно обновлена", 200
+
+@app.route('/api/settings/block_period', methods=['GET'])
+def get_block_period():
+    settings = settings_manager().settings
+    return jsonify({"block_period": settings.block_period.strftime('%Y-%m-%d')})
+
+@app.route('/api/inventory/<date_str>', methods=['GET'])
+def get_inventory(date_str):
+    try:
+        requested_date = datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        return "Ошибка: неверный формат даты", 400
+
+    block_period = settings_manager().settings.block_period
+    if requested_date <= block_period:
+        # Используем данные до блокировки
+        result = calculate_inventories_until_block(service.repo(), block_period, "STORAGE_ID")
+    else:
+        # Используем полные данные
+        result = generate_osv_report_with_block(service.repo(), "1900-01-01", requested_date, "STORAGE_ID")
+
+    return jsonify(result)
 
 @app.route('/api/data/<datatype>', methods=['GET'])
 def get_data(datatype):
