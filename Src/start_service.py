@@ -171,11 +171,13 @@ class start_service:
         with open(STATUS_FILE_PATH, 'w') as file:
             json.dump({'is_first_run': self.__is_first_run}, file)
 
+
     """
     Основной метод для генерации эталонных данных
     """
 
     def start(self):
+        self.__is_first_run = True
         if self.__is_first_run:
             self.__default_create_ranges()
             self.__default_create_nomenclature()

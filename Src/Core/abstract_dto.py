@@ -30,7 +30,7 @@ class abstract_dto(ABC):
         # Универсальный фабричный метод для загрузки dto из словаря
 
     @abstractmethod
-    def create(self, data) -> "AbstractDto":
+    def create(self, data) -> "abstract_dto":
         validator.validate(data, dict)
         fields = common.get_fields(self)
         matching_keys = list(filter(lambda key: key in fields, data.keys()))

@@ -44,7 +44,7 @@ class test_models(unittest.TestCase):
     # Данные загружаем через json настройки
     def test_load_createmodel_companymodel(self):
         # Подготовка
-       file_name = "../settings.json"
+       file_name = "./settings.json"
        manager = settings_manager()
        manager.file_name = file_name
        # Дейсвтие
@@ -57,7 +57,7 @@ class test_models(unittest.TestCase):
     # Данные загружаем. Проверяем работу Singletone
     def test_loadCombo_createmodel_companymodel(self):
         # Подготовка
-        file_name = "../settings_company.json"
+        file_name = "./settings_company.json"
         manager1 = settings_manager()
         manager1.file_name = file_name
         manager2 = settings_manager()
@@ -71,7 +71,7 @@ class test_models(unittest.TestCase):
 
     #Проверка на создание объекта Settings
     def test_convert_in_settings(self):
-        file_name = "../settings_company.json"
+        file_name = "./settings_company.json"
         manager = settings_manager()
         with open( file_name, 'r', encoding='utf-8') as file_instance:
             data = json.load(file_instance)
@@ -80,7 +80,7 @@ class test_models(unittest.TestCase):
     
     # проверка на загрузку настроек в settings
     def test_conver_init_setings(self):
-        file_name = "../settings_company.json"
+        file_name = "./settings_company.json"
         manager1 = settings_manager()
         manager1.file_name = file_name
         manager1.load()
@@ -95,7 +95,7 @@ class test_models(unittest.TestCase):
     # Проверка что путь загружается абсолютным
     def test_file_name_absolute_path(self):
         manager = settings_manager()
-        file_name = "../settings_company.json"
+        file_name = "./settings_company.json"
         manager.file_name = file_name
         assert manager.file_name != file_name
         assert os.path.isabs(manager.file_name) == True
@@ -124,7 +124,7 @@ class test_models(unittest.TestCase):
 
     # проверка на дефолтные настройки
     def test_default_settings(self):
-        file_name = "../settings.json"
+        file_name = "./settings.json"
         manager1 = settings_manager()
         manager1.file_name = file_name
         assert manager1.settings.company.name == "Noname"
