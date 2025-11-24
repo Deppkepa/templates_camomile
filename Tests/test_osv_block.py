@@ -28,7 +28,7 @@ class test_osv_block_Logic(unittest.TestCase):
         tr1.unit.unique_code = "KG"
         tr1.quantity = 100.0
         tr1.storage = storage_model()
-        tr1.storage.unique_code = "STORE_A"
+        tr1.storage.unique_code = "STORE_B"
 
         tr2 = transaction_model()
         tr2.date = datetime(2024, 1, 15)
@@ -38,7 +38,7 @@ class test_osv_block_Logic(unittest.TestCase):
         tr2.unit.unique_code = "KG"
         tr2.quantity = -50.0
         tr2.storage = storage_model()
-        tr2.storage.unique_code = "STORE_A"
+        tr2.storage.unique_code = "STORE_B"
 
         tr3 = transaction_model()
         tr3.date = datetime(2024, 2, 1)
@@ -48,13 +48,13 @@ class test_osv_block_Logic(unittest.TestCase):
         tr3.unit.unique_code = "KG"
         tr3.quantity = 30.0
         tr3.storage = storage_model()
-        tr3.storage.unique_code = "STORE_A"
+        tr3.storage.unique_code = "STORE_B"
 
         repo.transactions.extend([tr1, tr2, tr3])
 
         block_period = datetime(2024, 1, 15)
         # Действие
-        result = calculate_inventories_until_block(repo, block_period, "STORE_A")
+        result = calculate_inventories_until_block(repo, block_period, "STORE_B")
         # Проверки
         self.assertIn(("PROD-B-KG", 50), result.items())
 
@@ -93,13 +93,10 @@ class test_osv_block_Logic(unittest.TestCase):
         tr3.quantity = 30.0
         tr3.storage = storage_model()
         tr3.storage.unique_code = "STORE_A"
-
         repo.transactions.extend([tr1, tr2, tr3])
 
         block_period = datetime(2024, 3, 2)
         end_date = datetime(2024, 2, 2)
-
-        print("HELLO IM HERE!!!", len(repo.transactions))
         # Действие
         result = generate_osv_report_with_block(repo, "1900-01-01", end_date, "STORE_A", block_period=block_period)
         # Проверки

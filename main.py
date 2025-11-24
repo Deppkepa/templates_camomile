@@ -92,38 +92,33 @@ def aggregate_movements(transactions, begin, end, storage_id):
 
 def calculate_inventories_until_block(repo, block_period, storage_id):
     """
-    Рассчитывает остатки до даты блокировки.
+    Рассчитывает остатки до даты блокировки с восстановлением ранее сохранённого результата.
     """
-    # Сначала попробуем найти готовый инвентарный снимок
-    existing_snapshot = next(
-        (snap.inventory for snap in repo.inventory_snapshots if snap.snapshot_date == block_period),
-        None
-    )
 
-    if existing_snapshot is None:
-        # Если готового снимка нет, делаем расчет вручную
-        beginning = datetime.strptime("1900-01-01", "%Y-%m-%d")
-        # Возьмем все транзакции до даты блокировки
+    # Попытаемся восстановить остатки из настроечной даты блокировки
+    settings = settings_manager().settings
+    cached_result = settings.inventory_cache.get(storage_id, {})
+
+    if not settings.block_period:
+        settings.block_period = block_period
+
+    # Если кэш пустой или устаревший, проводим перерасчет
+    if not cached_result or block_period > settings.block_period:
         relevant_txns = [
             txn for txn in repo.transactions
-            if txn.storage.unique_code == storage_id and beginning <= txn.date <= block_period
+            if txn.storage.unique_code == storage_id and txn.date <= block_period
         ]
 
-        # Сделаем агрегирование
         inventories = defaultdict(float)
         for txn in relevant_txns:
             key = f"{txn.nomenclature.unique_code}-{txn.unit.unique_code}"
             inventories[key] += txn.quantity
 
-        # Создаем новый инвентарный снимок и сохраняем его
-        new_snapshot = inventory_snapshot_model()
-        new_snapshot.snapshot_date = block_period
-        new_snapshot.inventory = dict(inventories)
-        repo.inventory_snapshots.append(new_snapshot)
-        return new_snapshot.inventory
+        # Сохраняем кэшированные остатки
+        settings.inventory_cache[storage_id] = inventories
+        return inventories
     else:
-        return existing_snapshot
-
+        return cached_result
 def generate_osv_report_with_block(repo, begin_date, end_date, storage_id, block_period=settings_manager().settings.block_period):
     """
     Генерирует отчет ОСВ с учетом блокировки.

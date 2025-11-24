@@ -29,8 +29,8 @@ def generate_random_transactions(num_transactions):
     return repo
 
 
-def measure_performance(num_transactions, block_period):
-    repo = generate_random_transactions(num_transactions)
+def measure_performance(repo, num_transactions, block_period):
+
     start_date = datetime(2024, 1, 1)
     end_date = datetime(2024, 10, 1)
 
@@ -42,7 +42,9 @@ def measure_performance(num_transactions, block_period):
 
 
 def benchmark_osv_calculation():
+
     num_transactions = 100000
+    repo = generate_random_transactions(num_transactions)
     results = []
 
     # Различные варианты даты блокировки
@@ -54,15 +56,13 @@ def benchmark_osv_calculation():
     ]
 
     for block_date in block_dates:
-        exec_time = measure_performance(num_transactions, block_date)
+        exec_time = measure_performance(repo, num_transactions, block_date)
         results.append((block_date, exec_time))
 
     # Выводим результаты в Markdown
     md_results = f"# Результаты нагрузочных тестов для {num_transactions} транзакций\n\n| Дата блокировки | Время выполнения (секунды) |\n|-----------------|----------------------------|\n"
     for block_date, exec_time in results:
         md_results += f"| {block_date:%Y-%m-%d} | {exec_time:.2f} |\n"
-
-    print(md_results)
 
 
 benchmark_osv_calculation()
