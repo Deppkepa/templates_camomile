@@ -1,3 +1,7 @@
+from datetime import datetime
+from typing import Optional, Dict
+
+from Src.Core.validator import validator
 from Src.Models.company_model import company_model
 from Src.Core.abstract_reference import abstract_reference
 
@@ -7,6 +11,25 @@ from Src.Core.abstract_reference import abstract_reference
 class settings_model(abstract_reference):
     __company: company_model = None
     __response_format: str = ""
+    __block_period: Optional[datetime] = None
+    __inventory_cache: Dict[str, Dict[str, float]] = {}  # Кэш остатков
+
+    @property
+    def inventory_cache(self) -> Dict[str, Dict[str, float]]:
+        return self.__inventory_cache
+
+    @inventory_cache.setter
+    def inventory_cache(self, value):
+        self.__inventory_cache = value
+
+    @property
+    def block_period(self) -> Optional[datetime]:
+        return self.__block_period
+
+    @block_period.setter
+    def block_period(self, value: datetime):
+        validator.validate(value, datetime)
+        self.__block_period = value
 
     @property
     def company(self) -> company_model:

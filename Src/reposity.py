@@ -1,5 +1,7 @@
-from Src.Core.validator import validator
+from typing import List
 
+from Src.Core.validator import validator
+from Src.Models.inventory_snapshot_model import inventory_snapshot_model
 
 """
 Репозиторий данных
@@ -10,6 +12,16 @@ class reposity:
     __transactions: list = []
     __storages: list = []
 
+    __inventory_snapshots: List[inventory_snapshot_model] = []
+
+    @property
+    def inventory_snapshots(self) -> List[inventory_snapshot_model]:
+        return self.__inventory_snapshots
+
+    @inventory_snapshots.setter
+    def inventory_snapshots(self, value: List[inventory_snapshot_model]):
+        validator.validate(value, List[inventory_snapshot_model])
+        self.__inventory_snapshots = value
     @property
     def transactions(self) -> list:
         return self.__transactions

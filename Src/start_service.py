@@ -39,7 +39,6 @@ class start_service:
         self.__repo.data[reposity.range_key()[3]].append(stg1)
 
     def __default_create_transactions(self):
-        storage = self.__repo.data[reposity.range_key()[3]][0]
         nomenclature = self.__repo.data[reposity.range_key()[1]][0]
         unit = self.__repo.data[reposity.range_key()[0]][0]
 
@@ -47,7 +46,7 @@ class start_service:
         tx1.date = datetime.now()
         tx1.unique_code = "TXN-001"
         tx1.nomenclature = nomenclature
-        tx1.storage = storage
+        tx1.storage = storage_model()
         tx1.quantity = 100.0
         tx1.unit = unit
 
