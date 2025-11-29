@@ -26,3 +26,5 @@ class convert_factory:
                 return handler
 
         raise TypeError(f"Не найден подходящий конвертор для объекта {obj}")
+    
+    

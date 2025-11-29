@@ -1,5 +1,7 @@
 from Src.Core.validator import validator, OperationException
 from abc import ABC, abstractmethod
+from Src.Core.event_type import event_type
+
 
 # Абстрактный класс для формирования ответов
 class abstract_response(ABC):
@@ -15,3 +17,14 @@ class abstract_response(ABC):
             raise OperationException("Нет данных!")
 
         return f""
+    
+
+    """
+    Обработка события
+    """
+    def handle(self, event: str, params):
+        validator.check_type_value(event, str)
+        events = event_type.events()
+
+        if event not in events:
+            raise OperationException(f"{events} - не является событием!")
