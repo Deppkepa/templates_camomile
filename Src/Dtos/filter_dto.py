@@ -1,9 +1,14 @@
 from Src.Core.abstract_dto import abstract_dto
+from Src.Core.filter_type import filter_type
+from Src.Core.validator import validator
 
 # Фильтрация
+# класс для хранения типов фильтеров
+
 class filter_dto(abstract_dto):
-    __field_name:str = ""
-    __value:str = ""
+    __field_name:str = "" # Поле, по которому фильтруем
+    __value:str = "" # Значение для фильтрации
+    __filter_type: filter_type = None
 
 
     @property
@@ -21,6 +26,15 @@ class filter_dto(abstract_dto):
     @value.setter
     def value(self, value:str):
         self.__value = value
+
+    @property
+    def filter_type(self) -> str:
+        return self.__filter_type
+    
+    @filter_type.setter
+    def filter_type(self, value:str):
+        
+        self.__filter_type = value
 
     def create():
         pass

@@ -11,6 +11,8 @@ from Src.start_service import start_service
 from Src.Logics.response_json import response_json
 from Src.Convs.convert_factory import convert_factory
 from Src.Core.common import common
+from Src.Dtos.filter_dto import filter_dto
+from Src.Logics.prototype_report import prototype_report
 
 app = connexion.FlaskApp(__name__)
 service = start_service()
@@ -26,6 +28,29 @@ conv_factory = convert_factory()
 @app.route("/api/accessibility", methods=['GET'])
 def formats():
     return "SUCCESS"
+
+@app.route('/api/filter/<domain_model>', methods=['POST'])
+def apply_filter(domain_model):
+    """
+    Применяет фильтрацию по данным модели domain_model.
+    
+    Parameters:
+        domain_model (str): Имя доменной модели (например, NomenclatureModel, UnitModel и др.)
+        
+    Request body:
+        - filter_dto (JSON): Объект FilterDTO для фильтрации.
+    """
+    request_main = request.get_json()
+
+    filter = filter_dto()
+    filter.field_name = request_main["filters"][0]["field_name"]
+    filter.value = request_main["filters"][0]["value"]
+    filter.filter_type = request_main["filters"][0]["filter_type"]
+    factory = factory_entities()
+    repository = service.repo()
+    data = repository.data.get(domain_model, [])
+    filtered_data = prototype_report.apply_filters(data, [filter])
+    return True
 
 
 @app.route('/api/osv', methods=['GET'])

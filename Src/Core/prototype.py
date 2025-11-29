@@ -3,6 +3,7 @@ from Src.Dtos.filter_dto import filter_dto
 from Src.Core.common import common
 
 # Абстрактный класс - прототип
+
 class prototype:
     __data = []
 

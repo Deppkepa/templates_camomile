@@ -3,6 +3,8 @@
 
 # Игнорируем файл статуса запуска
 run_status.json
+Docs/UnderstandCode.md
+
 
 # Игнорируем файлы с названием, начинающимся с "data_" и оканчивающимся ".json"
 data_*.json
