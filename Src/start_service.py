@@ -2,6 +2,11 @@ import json
 import os
 from datetime import datetime
 
+from Src.Core.observe_service import observe_service
+from Src.Handlers.delete_handler import delete_handler
+from Src.Handlers.edit_handler import edit_handler
+from Src.Handlers.save_handler import save_handler
+from Src.Logics.reference_service import reference_service
 from Src.Models.storange_model import storage_model
 from Src.Models.transaction_model import transaction_model
 from Src.reposity import reposity
@@ -16,6 +21,15 @@ STATUS_FILE_PATH = 'run_status.json'
 class start_service:
     __repo: reposity = reposity()
     __is_first_run: bool = True
+    __reference_service: reference_service = None
+    __observe_service: observe_service = None
+
+    @property
+    def observe_service(self):
+        return self.__observe_service
+    @property
+    def reference_service(self):
+        return self.__reference_service
 
     def first_run_setup(self):
         self.__is_first_run = True
@@ -26,6 +40,11 @@ class start_service:
         self.__repo[reposity.range_key()[2]] = []
         self.__repo[reposity.range_key()[3]] = []
         self.__repo[reposity.range_key()[4]] = []
+
+        self.__observe_service = observe_service(self)
+        self.__observe_service.add(edit_handler(self))
+        self.__observe_service.add(delete_handler(self))
+        self.__observe_service.add(save_handler(self))
 
     # Singletone
     def __new__(cls):
@@ -186,3 +205,4 @@ class start_service:
             self.__default_create_transactions()
             self.__is_first_run = False
             self.save_run_status()
+            self.__reference_service = reference_service(self)
