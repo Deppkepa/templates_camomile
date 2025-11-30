@@ -12,7 +12,7 @@ data_*.json
 ### OpenFrameworks+VisualStudio ###
 # ignore generated binaries
 # but not the data folder
-
+/.idea/
 /bin/*
 !/bin/data/
 

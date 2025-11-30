@@ -4,6 +4,8 @@ from datetime import datetime
 
 import connexion
 from flask import request, jsonify
+
+from Src.Core.abstract_reference import abstract_reference
 from Src.Logics.factory_entities import factory_entities
 from Src.Models.inventory_snapshot_model import inventory_snapshot_model
 from Src.settings_manager import settings_manager
@@ -24,6 +26,26 @@ conv_factory = convert_factory()
 Проверить доступность REST API
 """
 
+@app.route("/api/{reference_type}/{unique_code}", methods=['GET'])
+def get_reference(reference_type: str, unique_code: str):
+    return start_service.reference_service.find_reference(reference_type, unique_code)
+
+@app.route("/api/reference_type", methods=["PUT"])
+def put_reference(reference_type: str, model: abstract_reference):
+    return start_service.reference_service.add_reference(reference_type, model)
+
+@app.route("/api/{reference_type}/{unique_code}", methods=["PATCH"])
+def patch_reference(reference_type: str, unique_code: str, model: abstract_reference):
+    result = start_service.reference_service.edit_reference(reference_type, unique_code, model)
+    storage = start_service.repo().storages[0].unique_code
+    if reference_type == "storage_model":
+        storage = unique_code
+    generate_osv_report(service.data(), "1900-01-01", datetime.now(), storage)
+    return result
+
+@app.route("/api/{reference_type}/{unique_code}", methods=["DELETE"])
+def delete_reference(reference_type:str, unique_code: str):
+    return start_service.reference_service.remove_reference(reference_type, unique_code)
 
 @app.route("/api/accessibility", methods=['GET'])
 def formats():

@@ -29,7 +29,7 @@ class recipe_model(entity_model):
     @ingredients.setter
     def ingredients(self, value:list):
         validator.validate(value, list)
-        self.__cooking_method = value
+        self.__ingredients = value
     
 
     @property
