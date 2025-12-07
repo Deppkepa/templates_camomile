@@ -1,4 +1,8 @@
 {
+    "logging": {
+        "min_level": "DEBUG",
+        "output": "Data/app.txt"
+    },
     "company":
     {
         "name":"Рога и копыта"

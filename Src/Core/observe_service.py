@@ -1,6 +1,7 @@
-from Src.Core.abstract_response import abstract_response
+from Src.Core.abstract_logic import abstract_logic
 
-class ObserveService:
+
+class observe_service:
     handlers = []
 
     """
@@ -11,11 +12,11 @@ class ObserveService:
         if instance is None:
             return
 
-        if not isinstance(instance, abstract_response):
+        if not isinstance(instance, abstract_logic):
             return
 
-        if instance not in ObserveService.handlers:
-            ObserveService.handlers.append(instance)
+        if instance not in observe_service.handlers:
+            observe_service.handlers.append(instance)
 
     """
     Убрать объект из под наблюдения
@@ -25,16 +26,16 @@ class ObserveService:
         if instance is None:
             return
 
-        if not isinstance(instance, abstract_response):
+        if not isinstance(instance, abstract_logic):
             return
 
-        if instance not in ObserveService.handlers:
-            ObserveService.handlers.remove(instance)
+        if instance not in observe_service.handlers:
+            observe_service.handlers.remove(instance)
 
     """
     Вызвать события
     """
     @staticmethod
     def create_event(event: str, params):
-        for instance in ObserveService.handlers:
+        for instance in observe_service.handlers:
             instance.handle(event, params)

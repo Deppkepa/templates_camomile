@@ -2,6 +2,13 @@ import json
 import os
 from datetime import datetime
 
+from Src.Core.log_level import log_level
+from Src.Core.observe_service import observe_service
+from Src.Handlers.delete_handler import delete_handler
+from Src.Handlers.edit_handler import edit_handler
+from Src.Handlers.logging_handler import logging_handler
+from Src.Handlers.save_handler import save_handler
+from Src.Logics.reference_service import reference_service
 from Src.Models.storange_model import storage_model
 from Src.Models.transaction_model import transaction_model
 from Src.reposity import reposity
@@ -16,22 +23,53 @@ STATUS_FILE_PATH = 'run_status.json'
 class start_service:
     __repo: reposity = reposity()
     __is_first_run: bool = True
+    __reference_service: reference_service = None
+    observe_service: observe_service = observe_service()
+
+    __min_log_level = log_level.DEBUG
+    __log_file = "Data/app.txt"
+
+    @property
+    def min_log_level(self):
+        return self.__min_log_level
+
+    @property
+    def log_file(self):
+        return self.__log_file
+
+
+    @property
+    def reference_service(self):
+        return self.__reference_service
 
     def first_run_setup(self):
         self.__is_first_run = True
 
-    def __init__(self):
+    def __init__(self, settings_file: str = ""):
+        self.settings_file = settings_file
+        self.load_settings()
         self.__repo[reposity.range_key()[0]] = []
         self.__repo[reposity.range_key()[1]] = []
         self.__repo[reposity.range_key()[2]] = []
         self.__repo[reposity.range_key()[3]] = []
         self.__repo[reposity.range_key()[4]] = []
 
-    # Singletone
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(start_service, cls).__new__(cls)
-        return cls.instance
+        self.observe_service.add(edit_handler(self))
+        self.observe_service.add(delete_handler(self))
+        self.observe_service.add(save_handler(self))
+        self.observe_service.add(logging_handler(start_service=self, min_level=self.__min_log_level, output=self.__log_file))
+
+    def load_settings(self):
+        with open(self.settings_file, mode='r', encoding="utf-8") as file:
+            objects = json.load(file)
+
+            log_levels = {
+                "DEBUG": log_level.DEBUG,
+                "INFO": log_level.INFO,
+                "ERROR": log_level.ERROR
+            }
+            self.__min_log_level = log_levels[objects["logging"]["min_level"]]
+            self.__log_file = objects["logging"]["output"]
 
     def __default_create_storages(self):
         stg1 = storage_model().create("Центральный склад")
@@ -170,7 +208,6 @@ class start_service:
         with open(STATUS_FILE_PATH, 'w') as file:
             json.dump({'is_first_run': self.__is_first_run}, file)
 
-
     """
     Основной метод для генерации эталонных данных
     """
@@ -186,3 +223,4 @@ class start_service:
             self.__default_create_transactions()
             self.__is_first_run = False
             self.save_run_status()
+            self.__reference_service = reference_service(self)

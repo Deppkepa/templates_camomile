@@ -11,7 +11,7 @@ from Src.Core.abstract_reference import abstract_reference
 class settings_model(abstract_reference):
     __company: company_model = None
     __response_format: str = ""
-    __block_period: Optional[datetime] = None
+    __block_period: Optional[datetime] = datetime.now()
     __inventory_cache: Dict[str, Dict[str, float]] = {}  # Кэш остатков
 
     @property

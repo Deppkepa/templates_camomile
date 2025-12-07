@@ -59,7 +59,7 @@ class reposity:
         return self.__recipe
     
     @recipe.setter
-    def recipe (self, recipe: list):
+    def recipe(self, recipe: list):
         validator.validate(recipe, list)
         self.__recipe = recipe
     

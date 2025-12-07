@@ -1,21 +1,19 @@
 import json
 from collections import defaultdict
 from datetime import datetime
-
 import connexion
 from flask import request, jsonify
+from Src.Core.event_type import event_type
 from Src.Logics.factory_entities import factory_entities
-from Src.Models.inventory_snapshot_model import inventory_snapshot_model
 from Src.settings_manager import settings_manager
 from Src.start_service import start_service
 from Src.Logics.response_json import response_json
 from Src.Convs.convert_factory import convert_factory
-from Src.Core.common import common
 from Src.Dtos.filter_dto import filter_dto
 from Src.Logics.prototype_report import prototype_report
 
 app = connexion.FlaskApp(__name__)
-service = start_service()
+service = start_service("settings.json")
 service.start()
 factory = factory_entities()
 conv_factory = convert_factory()
@@ -25,9 +23,64 @@ conv_factory = convert_factory()
 """
 
 
+@app.route("/api/{reference_type}/{unique_code}", methods=['GET'])
+def get_reference(reference_type: str, unique_code: str):
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/{reference_type}/{unique_code}",
+        "request_type": "GET",
+        "reference_type": reference_type,
+        "unique_code": unique_code
+    })
+    return start_service.reference_service.find_reference(reference_type, unique_code)
+
+
+@app.route("/api/reference_type", methods=["PUT"])
+def put_reference(reference_type: str, model):
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/reference_type",
+        "request_type": "PUT",
+        "reference_type": reference_type,
+        "model_unique_code": model.unique_code
+    })
+    return start_service.reference_service.add_reference(reference_type, model)
+
+
+@app.route("/api/{reference_type}/{unique_code}", methods=["PATCH"])
+def patch_reference(reference_type: str, unique_code: str, model):
+    result = start_service.reference_service.edit_reference(reference_type, unique_code, model)
+    storage = start_service.repo().storages[0].unique_code
+    if reference_type == "storage_model":
+        storage = unique_code
+    generate_osv_report(service.data(), "1900-01-01", datetime.now(), storage)
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/{reference_type}/{unique_code}",
+        "request_type": "PATCH",
+        "reference_type": reference_type,
+        "unique_code": unique_code,
+        "model_unique_code": model.unique_code
+    })
+    return result
+
+
+@app.route("/api/{reference_type}/{unique_code}", methods=["DELETE"])
+def delete_reference(reference_type: str, unique_code: str):
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/{reference_type}/{unique_code}",
+        "request_type": "DELETE",
+        "reference_type": reference_type,
+        "unique_code": unique_code
+    })
+    return start_service.reference_service.remove_reference(reference_type, unique_code)
+
+
 @app.route("/api/accessibility", methods=['GET'])
 def formats():
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/accessibility",
+        "request_type": "GET"
+    })
     return "SUCCESS"
+
 
 @app.route('/api/filter/<domain_model>', methods=['POST'])
 def apply_filter(domain_model):
@@ -50,6 +103,11 @@ def apply_filter(domain_model):
     repository = service.repo()
     data = repository.data.get(domain_model, [])
     filtered_data = prototype_report.apply_filters(data, [filter])
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/filter/<domain_model>",
+        "request_type": "POST",
+        "domain_model": domain_model
+    })
     return True
 
 
@@ -72,10 +130,18 @@ def get_osv():
     storage_id = request.args.get('storage_id')
 
     if not all([begin_date, end_date, storage_id]):
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/osv",
+            "request_type": "GET"
+        })
         return "Ошибка: отсутствуют обязательные параметры", 400
 
     repo = service.data()
     report = generate_osv_report(repo, begin_date, end_date, storage_id)
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/osv",
+        "request_type": "GET"
+    })
     return jsonify(conv_factory.get_converter(report).convert(report))
 
 
@@ -115,6 +181,7 @@ def aggregate_movements(transactions, begin, end, storage_id):
             movements[key] = movement
     return movements
 
+
 def calculate_inventories_until_block(repo, block_period, storage_id):
     """
     Рассчитывает остатки до даты блокировки с восстановлением ранее сохранённого результата.
@@ -144,11 +211,13 @@ def calculate_inventories_until_block(repo, block_period, storage_id):
         return inventories
     else:
         return cached_result
-def generate_osv_report_with_block(repo, begin_date, end_date, storage_id, block_period=settings_manager().settings.block_period):
+
+
+def generate_osv_report_with_block(repo, begin_date, end_date, storage_id,
+                                   block_period=settings_manager().settings.block_period):
     """
     Генерирует отчет ОСВ с учетом блокировки.
     """
-
 
     # Проверяем, есть ли у нас готовность на момент блокировки
     pre_block_inventories = calculate_inventories_until_block(repo, block_period, storage_id)
@@ -174,6 +243,7 @@ def generate_osv_report_with_block(repo, begin_date, end_date, storage_id, block
             combined_inventories[key] = value
 
     return combined_inventories
+
 
 def generate_osv_report(repo, begin_date, end_date, storage_id):
     """
@@ -255,36 +325,67 @@ def save_repository_to_file():
         with open(filename, 'w', encoding='utf-8') as file:
             data = serialize_repo(repo)
             json.dump(data, file, ensure_ascii=False, indent=4)
+        start_service.observe_service.create_event(event_type.INFO_EVENT, {
+            "request": "/api/save",
+            "request_type": "GET"
+        })
         return "Данные сохранены успешно", 200
     except Exception as e:
-        print(e)
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/save",
+            "request_type": "GET"
+        })
         return "Ошибка при сохранении данных", 500
+
 
 @app.route('/api/settings/block_period', methods=['POST'])
 def update_block_period():
     block_period_str = request.form.get('block_period')
     if not block_period_str:
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/settings/block_period",
+            "request_type": "POST"
+        })
         return "Ошибка: отсутствует обязательный параметр", 400
 
     try:
         block_period = datetime.strptime(block_period_str, "%Y-%m-%d")
     except ValueError:
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/settings/block_period",
+            "request_type": "POST"
+        })
         return "Ошибка: неверный формат даты", 400
 
     settings = settings_manager().settings
     settings.block_period = block_period
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/settings/block_period",
+        "request_type": "POST"
+    })
     return "Дата блокировки успешно обновлена", 200
+
 
 @app.route('/api/settings/block_period', methods=['GET'])
 def get_block_period():
     settings = settings_manager().settings
-    return jsonify({"block_period": settings.block_period.strftime('%Y-%m-%d')})
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/settings/block_period",
+        "request_type": "GET"
+    })
+    return jsonify({"block_period": settings.block_period})
+
 
 @app.route('/api/inventory/<date_str>', methods=['GET'])
 def get_inventory(date_str):
     try:
         requested_date = datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/inventory/<date_str>",
+            "request_type": "GET",
+            "date_str": date_str
+        })
         return "Ошибка: неверный формат даты", 400
 
     block_period = settings_manager().settings.block_period
@@ -294,8 +395,13 @@ def get_inventory(date_str):
     else:
         # Используем полные данные
         result = generate_osv_report_with_block(service.repo(), "1900-01-01", requested_date, "STORAGE_ID")
-
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/inventory/<date_str>",
+        "request_type": "GET",
+        "date_str": date_str
+    })
     return jsonify(result)
+
 
 @app.route('/api/data/<datatype>', methods=['GET'])
 def get_data(datatype):
@@ -323,7 +429,17 @@ def get_data(datatype):
     elif datatype == "group_nomenclature":
         filtered_data = data["group_nomenclature_model"]
     else:
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/data/<datatype>",
+            "request_type": "GET",
+            "datatype": datatype
+        })
         return "Неправильно указанный тип данных", 400
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/data/<datatype>",
+        "request_type": "GET",
+        "datatype": datatype
+    })
     return jsonify(convert_factory.get_converter(filtered_data).convert(filtered_data))
 
 
@@ -334,6 +450,10 @@ def get_receipts():
     """
 
     recipes = service.recipe()
+    start_service.observe_service.create_event(event_type.INFO_EVENT, {
+        "request": "/api/receipts",
+        "request_type": "GET"
+    })
     return response_json().build('json', recipes)
 
 
@@ -345,8 +465,18 @@ def get_receipt(code):
     recipes = service.recipe()
     receipt = next((r for r in recipes if r.unique_code == code), None)
     if receipt:
+        start_service.observe_service.create_event(event_type.INFO_EVENT, {
+            "request": "/api/receipt/<code>",
+            "request_type": "GET",
+            "code": code
+        })
         return response_json().build('json', [receipt])
     else:
+        start_service.observe_service.create_event(event_type.ERROR_EVENT, {
+            "request": "/api/receipt/<code>",
+            "request_type": "GET",
+            "code": code
+        })
         return "Рецепт не найден", 404
 
 
